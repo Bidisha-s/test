@@ -1,50 +1,83 @@
+import { HiOutlineMenu } from "react-icons/hi";
+import { HiOutlineBell } from "react-icons/hi";
+import { GoPersonFill } from "react-icons/go";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { jwtDecode } from "jwt-decode"
+
+import "./navbar.scss";
+
+const Navbar = ({ toggleSidebar, onLogout }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(null)
+  const navigate = useNavigate()
 
 
-import Home from "./pages/home/Home";
-import Signin from "../src/pages/signin/Signin.jsx"
-import List from "./pages/list/List";
-import Single from "./pages/single/Single";
-import New from "./pages/new/New";
-import { BrowserRouter, Routes, Route,Navigate } from "react-router-dom";
-import { useEffect,useState } from "react";
-
-
-function App() {
-
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) setIsAuthenticated(true);
+    if (token) {
+      try {
+        const d = jwtDecode(token);
+        setIsAuthenticated(d)
+      } catch (error) {
+        console.error("invalid token")
+      }
+    }
   }, []);
 
-
-
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsAuthenticated(null);
+    onLogout();
+    navigate("/signin")
+  };
   return (
-    <div className={
-      "app"}>
-        
-      <BrowserRouter>
-        <Routes>
-          
-          {/* <Route path="/"> */}
-          
-            <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/signin" />} />
-          <Route path="/promotions" element={isAuthenticated ? <List /> : <Navigate to="/signin" />} />
-          <Route path="/promotions/:id" element={isAuthenticated ? <Single /> : <Navigate to="/signin" />} />
-          <Route path="/promotions/new" element={isAuthenticated ? <New /> : <Navigate to="/signin" />} />
+    <div className="navbar">
+      {isAuthenticated ? (
+        <>
+          <div className="wrapper">
+            <HiOutlineMenu className="menu-icon" onClick={toggleSidebar} />
 
-          {/* Public Route (Signin) */}
-          <Route path="/signin" element={<Signin onSignin={() => setIsAuthenticated(true)} />} />
+            <div className="right">
+              {/* Button */}
+              <div className="right-item">
+                <button onClick={handleLogout} className="internal-button">log out</button>
+              </div>
 
-          {/* Redirect all other routes */}
-          <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/signin"} />} />
-            
-          {/* </Route> */}
-        </Routes>
-      </BrowserRouter>
+              {/* Divider */}
+              <div className="divider"></div>
+
+              {/* Country */}
+              <div className="right-item">
+                <span className="country">Country</span>
+              </div>
+
+              {/* Divider */}
+              <div className="divider"></div>
+
+              {/* Username with logo */}
+              <div className="right-item">
+                <GoPersonFill size={20} className="user-logo" />
+                <span className="username">{isAuthenticated.username}</span>
+              </div>
+
+              {/* Divider */}
+              <div className="divider"></div>
+
+              {/* Notification icon */}
+              <div className="right-item">
+                <HiOutlineBell className="notification-icon" />
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <Link to="/signin">Signin</Link>
+        </>
+      )}
+
     </div>
   );
-}
+};
 
-export default App;
-
+export default Navbar;
