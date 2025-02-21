@@ -1,58 +1,83 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { HiOutlineMenu } from "react-icons/hi";
+import { HiOutlineBell } from "react-icons/hi";
+import { GoPersonFill } from "react-icons/go";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { jwtDecode } from "jwt-decode"
 
-const Signin = ({ onSignin }) => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+import "./navbar.scss";
 
-  const handleSignin = async (e) => {
-    e.preventDefault();
-    setError("");
+const Navbar = ({ toggleSidebar, onLogout }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(null)
+  const navigate = useNavigate()
 
-    try {
-      const response = await fetch("http://localhost:5000/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
-
-      localStorage.setItem("token", data.token);
-      onSignin(); 
-      console.log("success")
-      navigate("/")
-    } catch (err) {
-      setError(err.message);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const d = jwtDecode(token);
+        setIsAuthenticated(d)
+      } catch (error) {
+        console.error("invalid token")
+      }
     }
-  };
+  }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsAuthenticated(null);
+    onLogout();
+    navigate("/signin")
+  };
   return (
-    <div>
-      <h2>Sign In</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <form onSubmit={handleSignin}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Sign In</button>
-      </form>
+    <div className="navbar">
+      {isAuthenticated ? (
+        <>
+          <div className="wrapper">
+            <HiOutlineMenu className="menu-icon" onClick={toggleSidebar} />
+
+            <div className="right">
+              {/* Button */}
+              <div className="right-item">
+                <button onClick={handleLogout} className="internal-button">log out</button>
+              </div>
+
+              {/* Divider */}
+              <div className="divider"></div>
+
+              {/* Country */}
+              <div className="right-item">
+                <span className="country">Country</span>
+              </div>
+
+              {/* Divider */}
+              <div className="divider"></div>
+
+              {/* Username with logo */}
+              <div className="right-item">
+                <GoPersonFill size={20} className="user-logo" />
+                <span className="username">{isAuthenticated.username}</span>
+              </div>
+
+              {/* Divider */}
+              <div className="divider"></div>
+
+              {/* Notification icon */}
+              <div className="right-item">
+                <HiOutlineBell className="notification-icon" />
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <Link to="/signin">Signin</Link>
+        </>
+      )}
+
     </div>
   );
 };
 
-export default Signin;
+export default Navbar;
