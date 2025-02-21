@@ -1,83 +1,64 @@
-import { HiOutlineMenu } from "react-icons/hi";
-import { HiOutlineBell } from "react-icons/hi";
-import { GoPersonFill } from "react-icons/go";
+
+
+import Home from "./pages/home/Home";
+import Signin from "../src/pages/signin/Signin.jsx"
+import List from "./pages/list/List";
+import Single from "./pages/single/Single";
+import New from "./pages/new/New";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { jwtDecode } from "jwt-decode"
+import Navbar from "./components/navbar/Navbar.jsx";
 
-import "./navbar.scss";
 
-const Navbar = ({ toggleSidebar, onLogout }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null)
-  const navigate = useNavigate()
+function App() {
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const d = jwtDecode(token);
-        setIsAuthenticated(d)
-      } catch (error) {
-        console.error("invalid token")
-      }
-    }
+    if (token) setIsAuthenticated(true);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsAuthenticated(null);
-    onLogout();
-    navigate("/signin")
-  };
+
+
   return (
-    <div className="navbar">
-      {isAuthenticated ? (
-        <>
-          <div className="wrapper">
-            <HiOutlineMenu className="menu-icon" onClick={toggleSidebar} />
+    <div className="app">
+      <BrowserRouter>
+        {isAuthenticated ?
 
-            <div className="right">
-              {/* Button */}
-              <div className="right-item">
-                <button onClick={handleLogout} className="internal-button">log out</button>
-              </div>
+          (
+            <>
+              <Routes>
+                <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/signin" />} />
+                <Route path="/promotions" element={isAuthenticated ? <List /> : <Navigate to="/signin" />} />
+                <Route path="/promotions/:id" element={isAuthenticated ? <Single /> : <Navigate to="/signin" />} />
+                <Route path="/promotions/new" element={isAuthenticated ? <New /> : <Navigate to="/signin" />} />
 
-              {/* Divider */}
-              <div className="divider"></div>
+                {/* Public Route (Signin) */}
+                <Route path="/signin" element={<Signin onSignin={() => setIsAuthenticated(true)} />} />
 
-              {/* Country */}
-              <div className="right-item">
-                <span className="country">Country</span>
-              </div>
+                {/* Redirect all other routes */}
+                <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/signin"} />} />
+              </Routes>
+            </>
+          ) : (
+            <>
 
-              {/* Divider */}
-              <div className="divider"></div>
+            </>
+          )} {/* Show Navbar when logged in */}
+        <Routes>
 
-              {/* Username with logo */}
-              <div className="right-item">
-                <GoPersonFill size={20} className="user-logo" />
-                <span className="username">{isAuthenticated.username}</span>
-              </div>
+          {/* Public Route (Signin) */}
+          <Route path="/signin" element={<Signin onSignin={() => setIsAuthenticated(true)} />} />
 
-              {/* Divider */}
-              <div className="divider"></div>
-
-              {/* Notification icon */}
-              <div className="right-item">
-                <HiOutlineBell className="notification-icon" />
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <Link to="/signin">Signin</Link>
-        </>
-      )}
-
+          {/* Redirect all other routes */}
+          <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/signin"} />} />
+        </Routes>
+      </BrowserRouter>
     </div>
   );
-};
+}
 
-export default Navbar;
+export default App;
+
